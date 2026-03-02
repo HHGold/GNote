@@ -4,6 +4,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, LogOut, Cloud, CloudOff, User, Shield, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNotes } from '../context/NotesContext';
+import packageJson from '../../package.json';
+
+const APP_VERSION = packageJson.version;
 
 // Google Logo SVG 元件
 const GoogleLogo = ({ size = 20 }) => (
@@ -291,7 +294,7 @@ const SettingsView = () => {
                             <div>
                                 <div style={{ fontWeight: 500, fontSize: '16px' }}>版本與更新</div>
                                 <div style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>
-                                    當前版本: v1.0.7
+                                    當前版本: v{APP_VERSION}
                                 </div>
                             </div>
                         </div>
@@ -301,7 +304,7 @@ const SettingsView = () => {
                                 try {
                                     const { registerPlugin } = await import('@capacitor/core');
                                     const UpdatePlugin = registerPlugin('UpdatePlugin');
-                                    const result = await UpdatePlugin.checkForUpdate({ currentVersion: '1.0.7' });
+                                    const result = await UpdatePlugin.checkForUpdate({ currentVersion: APP_VERSION });
 
                                     if (result.status === 'NO_UPDATE') {
                                         alert('目前已經是最新版本囉！');
@@ -337,7 +340,7 @@ const SettingsView = () => {
                     fontSize: '12px',
                     padding: '24px 0',
                 }}>
-                    Premium Notes v1.0.7
+                    Premium Notes v{APP_VERSION}
                 </div>
             </main>
 
