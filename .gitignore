@@ -12,6 +12,13 @@ dist
 dist-ssr
 *.local
 
+*.apk
+*.p12
+*.jks
+local.properties
+.env
+google-services.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

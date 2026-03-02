@@ -291,7 +291,7 @@ const SettingsView = () => {
                             <div>
                                 <div style={{ fontWeight: 500, fontSize: '16px' }}>版本與更新</div>
                                 <div style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>
-                                    當前版本: v1.0.6
+                                    當前版本: v1.0.7
                                 </div>
                             </div>
                         </div>
@@ -301,13 +301,18 @@ const SettingsView = () => {
                                 try {
                                     const { registerPlugin } = await import('@capacitor/core');
                                     const UpdatePlugin = registerPlugin('UpdatePlugin');
-                                    const result = await UpdatePlugin.checkForUpdate({ currentVersion: '1.0.6' });
+                                    const result = await UpdatePlugin.checkForUpdate({ currentVersion: '1.0.7' });
+
                                     if (result.status === 'NO_UPDATE') {
                                         alert('目前已經是最新版本囉！');
+                                    } else if (result.status === 'ERROR') {
+                                        alert('更新檢查出錯: ' + result.message);
+                                    } else if (result.status === 'UPDATE_FOUND') {
+                                        // Java 端會自動處理下載，這邊不用做額外提示，或可加一個 Toast
                                     }
                                 } catch (e) {
                                     console.error('Update check failed', e);
-                                    alert('檢查更新失敗，請稍後再試。');
+                                    alert('通訊失敗: ' + (e.message || '無法連動 Android 系統'));
                                 }
                             }}
                             style={{
@@ -332,7 +337,7 @@ const SettingsView = () => {
                     fontSize: '12px',
                     padding: '24px 0',
                 }}>
-                    Premium Notes v1.0.6
+                    Premium Notes v1.0.7
                 </div>
             </main>
 

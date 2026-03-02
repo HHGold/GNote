@@ -50,17 +50,23 @@ public class UpdateHandler {
 
                         JSONObject json = new JSONObject(result.toString());
                         String latestVersion = json.getString("tag_name");
+                        android.util.Log.d("UpdateHandler", "Latest version from GitHub: " + latestVersion);
+
                         if (latestVersion.startsWith("v")) {
                             latestVersion = latestVersion.substring(1);
                         }
 
                         if (isNewerVersion(currentVersion, latestVersion)) {
+                            android.util.Log.d("UpdateHandler", "Newer version detected: " + latestVersion);
                             JSONArray assets = json.getJSONArray("assets");
                             String apkUrl = "";
                             for (int i = 0; i < assets.length(); i++) {
                                 JSONObject asset = assets.getJSONObject(i);
-                                if (asset.getString("name").endsWith(".apk")) {
+                                String assetName = asset.getString("name");
+                                android.util.Log.d("UpdateHandler", "Checking asset: " + assetName);
+                                if (assetName.endsWith(".apk")) {
                                     apkUrl = asset.getString("browser_download_url");
+                                    android.util.Log.d("UpdateHandler", "Found APK URL: " + apkUrl);
                                     break;
                                 }
                             }
@@ -76,14 +82,16 @@ public class UpdateHandler {
                                     }
                                 });
                             } else {
+                                android.util.Log.e("UpdateHandler", "No APK found in assets");
                                 runOnUi(context, new Runnable() {
                                     @Override
                                     public void run() {
-                                        callback.onResult("NO_UPDATE", "");
+                                        callback.onResult("ERROR", "No APK found in release");
                                     }
                                 });
                             }
                         } else {
+                            android.util.Log.d("UpdateHandler", "Already up to date: " + currentVersion);
                             runOnUi(context, new Runnable() {
                                 @Override
                                 public void run() {
@@ -92,6 +100,7 @@ public class UpdateHandler {
                             });
                         }
                     } else {
+                        android.util.Log.e("UpdateHandler", "Response code: " + connection.getResponseCode());
                         runOnUi(context, new Runnable() {
                             @Override
                             public void run() {
@@ -100,11 +109,12 @@ public class UpdateHandler {
                         });
                     }
                 } catch (Exception e) {
+                    android.util.Log.e("UpdateHandler", "Exception: " + e.getMessage());
                     e.printStackTrace();
                     runOnUi(context, new Runnable() {
                         @Override
                         public void run() {
-                            callback.onResult("ERROR", "Network error");
+                            callback.onResult("ERROR", "Network error: " + e.getMessage());
                         }
                     });
                 }
