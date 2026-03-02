@@ -1,0 +1,5 @@
+package com.chinhsiang.premiumnotes;
+
+import com.getcapacitor.BridgeActivity;
+
+public class MainActivity extends BridgeActivity {}

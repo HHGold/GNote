@@ -1,0 +1,15 @@
+{
+  "appId": "com.chinhsiang.premiumnotes",
+  "appName": "GNote",
+  "webDir": "dist",
+  "plugins": {
+    "GoogleAuth": {
+      "scopes": [
+        "profile",
+        "email"
+      ],
+      "serverClientId": "613935979196-gipvid7iofmps3mlch7korkuml7prt2h.apps.googleusercontent.com",
+      "forceCodeForRefreshToken": true
+    }
+  }
+}
