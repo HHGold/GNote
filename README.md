@@ -234,109 +234,65 @@ users/{uid}
 
 ## 🔑 Android 簽章金鑰與安全性 (Security)
 
-本專案已升級至更具通用性的 **PKCS#12** 與 **安全性外部管理** 流程。確保不同電腦打包的 APK 都能「無縫覆蓋更新」，同時保護敏感密碼不外洩。
+本專案已升級至更具通用性的 **PKCS#12** 與 **安全性外部管理** 流程。
 
-### 1. 安全性設定 (local.properties)
-為了保護金鑰密碼，敏感資訊已從 `build.gradle` 抽離，統一管理於 **`android/local.properties`** 檔案中（此檔案已排除於版本控制之外）。
+### 1. 安全性設定 (GitHub Secrets & local.properties)
+為了保護金鑰密碼，敏感資訊已禁止上傳至 GitHub。
+- **本地端**：管理於 `android/local.properties`。
+- **雲端端 (GitHub Actions)**：需在 GitHub Repository Settings 中設定以下 Secrets：
+  - `RELEASE_KEYSTORE_BASE64`：將 `release.p12` 轉為 Base64 字串。
+  - `RELEASE_STORE_PASSWORD` / `RELEASE_KEY_ALIAS` / `RELEASE_KEY_PASSWORD`。
 
-如果您需在其他環境編譯，請確保該檔案包含以下變數：
-```properties
-RELEASE_KEY_ALIAS=gold
-RELEASE_STORE_PASSWORD=440823
-RELEASE_KEY_PASSWORD=440823
-```
+### 2. 禁忌清單 (絕對不可上傳至 GitHub)
+- `android/app/release.p12` (數位簽章私鑰)
+- `android/app/google-services.json` (Google/Firebase 私有設定)
+- `local.properties` (本機路徑與密碼)
+- `*.apk` (編譯產物，應存放於 Releases 區)
 
-### 2. 金鑰資訊
-| 項目 | 值 |
-|------|-----|
-| **金鑰檔案位置** | `android/app/release.p12` |
-| **金鑰規格** | PKCS#12 (業界標準金鑰格式) |
-| **金鑰別名 (Alias)** | `gold` |
-| **SHA-1 指紋** | `24:EB:DA:9F:06:30:33:16:5B:82:33:9A:1B:4F:5A:45:86:56:10:03` |
+---
 
-> ⚠️ **警告**：`release.p12` 是整個專案最重要的檔案！遺失此檔案將導致無法更新已安裝的 App。
+## 🚀 自動化建構與更新系統 (CI/CD)
+
+本專案整合了 **GitHub Actions** 與 **原生更新檢查** 功能。
+
+### 1. 如何發布新版本
+1. 在 `package.json` 與 `android/app/build.gradle` 更新版本號（例如 `1.0.8`）。
+2. 將程式碼推送到主分支 (`main`)。
+3. 在本地執行：
+   ```bash
+   git tag v1.0.8
+   git push origin v1.0.8
+   ```
+4. GitHub Actions 會自動啟動，編譯、簽名並產出 `GNote.apk` 到 GitHub Releases。
+
+### 2. 原生更新機制 (Developer Note)
+- **Plugin 註冊順序**：在 `MainActivity.java` 中，`registerPlugin(UpdatePlugin.class)` **必須** 放在 `super.onCreate(savedInstanceState)` 之「前」，否則會導致通訊橋樑建立失敗（錯誤代碼：`plugin is not implemented`）。
+- **更新檢查流程**：App 啟動後可點擊設定頁面的「檢查更新」，透過 Native Bridge 請求 GitHub API，發現新版後會自動下載並啟動 Android `FileProvider` 進行現場安裝。
 
 ---
 
 ## 🚀 開發與部署
 
 ### 環境需求
+- Node.js 22 (建議)
+- Android Studio / JDK 21 (用於編譯自動簽名版本)
 
-- Node.js 18+
-- Android Studio（含 Android SDK）
-- JDK 17+
-
-### 本地開發
-
+### 打包指令
 ```bash
-# 安裝相依套件
-npm install
-
-# 啟動開發伺服器
-npm run dev
-# 預設開啟 http://localhost:5173/
-```
-
-### 建構生產版本
-
-```bash
-npm run build
-# 產出至 dist/ 目錄
-```
-
-### 打包 Android APK
-
-```bash
-# 建構 Web 版本並同步至 Android 專案
+# 同步 Web 至 Android
 npm run build
 npx cap sync android
 
-# 建構正式版 APK (Release)
+# 本地編譯測試版
 cd android
-.\gradlew.bat clean assembleRelease
-
-# 打包完成的 APK 位於：
-# android/app/build/outputs/apk/release/app-release.apk
-# 我們也為您將其複製到根目錄：GNote.apk
+.\gradlew assembleDebug
 ```
-
-> **注意**：首次在新電腦打包前，需確認 `android/local.properties` 內的 `sdk.dir` 指向正確的 Android SDK 路徑。
-
----
-
-## 📱 平台支援
-
-| 平台 | 支援方式 |
-|------|----------|
-| **Web 瀏覽器** | 直接透過 Vite 開發伺服器或部署靜態檔案 |
-| **Android** | 透過 Capacitor 打包為 APK（已產生 `GNote.apk`） |
-| **iOS** | 理論上可透過 Capacitor 支援（需 macOS + Xcode） |
-
----
-
-## 🐛 已修復的問題
-
-| 問題 | 解決方案 |
-|------|----------|
-| Android 按返回鍵直接退出 App | 在 `App.jsx` 加入 `@capacitor/app` 的 backButton 監聽器 |
-| Google 登入跳轉至 localhost | 改用 `@codetrix-studio/capacitor-google-auth` 原生登入 |
-| 暗黑模式底部工具列顏色偏灰 | 修正 CSS 層疊順序，暗黑模式下強制設為純黑 |
-| 編輯頁面底部出現大塊黑色區域 | 移除 `.view-container` 重複的安全區域 padding；加入 `viewport-fit=cover`；textarea 改用 `flex: 1` 填滿空間 |
-| 刪除備忘錄後從雲端「復活」 | 刪除前先 `clearTimeout` 取消排隊中的延遲同步；開啟備忘錄時若內容未改變不觸發自動儲存 |
-| 換電腦打包 APK 無法覆蓋更新 | 建立統一的 `release.keystore`，並設定 `build.gradle` 強制使用 |
-| 分享設定與權限遭自動儲存覆寫 | 改用 Firestore `updateDoc` 與 `deleteField` 進行精準欄位操作，取代會洗掉資料的 `setDoc` |
-| 非作者可看見或修改共享名單 | 在 UI 層透過 `isOwner` 判斷式，針對非擁有者隱藏分享圖示與共享人數標記 |
 
 ---
 
 ## ⚡ 特色亮點
+1. **正式版自動更新** — 內建透過 GitHub API 實現的最新版本檢查與自動安裝。
+2. **極致安全自動化** — 所有的簽名過程都在 GitHub 加密環境完成，本機金鑰不離身。
+3. **穩定的 APK 簽章** — 採用統一 PKCS#12 格式，換電腦開發也能產出可覆蓋更新的 APK。
+4. **指紋/生物辨識安全** — 私密筆記可自訂鎖定。
 
-1. **完全離線可用** — 未登入時使用 `localStorage` 儲存，無需任何帳號即可使用
-2. **即時雲端同步** — 登入後資料即時同步至 Firebase，跨裝置無縫切換
-3. **備忘錄分享** — 可透過 Email 將備忘錄分享給其他使用者，支援「可編輯」與「僅檢視」兩種權限
-4. **iOS 風格 UI** — 高度還原 iPhone 備忘錄的視覺設計與互動體驗
-5. **流暢動畫** — 頁面切換、對話框、列表操作均有細膩的動態效果
-6. **暗黑模式** — 完整支援系統暗黑模式，所有元件均有對應的深色主題
-7. **跨平台** — 一套程式碼同時支援 Web 與 Android
-8. **指紋/生物辨識安全** — 私密筆記可自訂鎖定，使用手機系統級安全驗證。
-9. **穩定的 APK 更新** — 使用統一簽章金鑰，任何電腦打包的版本皆可直接覆蓋更新。
