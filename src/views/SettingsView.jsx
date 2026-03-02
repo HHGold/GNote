@@ -278,13 +278,61 @@ const SettingsView = () => {
                     </div>
                 </section>
 
+                <section className="premium-card" style={{ padding: 0, overflow: 'hidden', marginTop: '24px' }}>
+                    <div style={{ padding: '16px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                            <div style={{
+                                width: 32, height: 32, borderRadius: '8px',
+                                background: '#10B981',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            }}>
+                                <AlertCircle size={18} color="white" />
+                            </div>
+                            <div>
+                                <div style={{ fontWeight: 500, fontSize: '16px' }}>版本與更新</div>
+                                <div style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>
+                                    當前版本: v1.0.6
+                                </div>
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={async () => {
+                                try {
+                                    const { registerPlugin } = await import('@capacitor/core');
+                                    const UpdatePlugin = registerPlugin('UpdatePlugin');
+                                    const result = await UpdatePlugin.checkForUpdate({ currentVersion: '1.0.6' });
+                                    if (result.status === 'NO_UPDATE') {
+                                        alert('目前已經是最新版本囉！');
+                                    }
+                                } catch (e) {
+                                    console.error('Update check failed', e);
+                                    alert('檢查更新失敗，請稍後再試。');
+                                }
+                            }}
+                            style={{
+                                width: '100%',
+                                padding: '12px',
+                                borderRadius: '10px',
+                                background: 'transparent',
+                                border: '1.5px solid #10B981',
+                                color: '#10B981',
+                                fontWeight: 600,
+                                cursor: 'pointer'
+                            }}
+                        >
+                            檢查最新版本
+                        </button>
+                    </div>
+                </section>
+
                 <div style={{
                     textAlign: 'center',
                     color: 'var(--text-secondary)',
                     fontSize: '12px',
                     padding: '24px 0',
                 }}>
-                    Premium Notes v1.0
+                    Premium Notes v1.0.6
                 </div>
             </main>
 
